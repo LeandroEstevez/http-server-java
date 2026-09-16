@@ -9,9 +9,7 @@ public class Main {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     System.out.println("Logs from your program will appear here!");
 
-    // TODO: Uncomment the code below to pass the first stage
-
-     try {
+    try {
        ServerSocket serverSocket = new ServerSocket(4221);
 
        // Since the tester restarts your program quite often, setting SO_REUSEADDR
@@ -30,7 +28,7 @@ public class Main {
        while (true) {
            line = bufferedReader.readLine();
 
-           if (line == null) {
+           if (line == null || line.isEmpty()) {
                break;
            }
 
@@ -53,8 +51,8 @@ public class Main {
        }
        out.flush();
 
-     } catch (IOException e) {
+    } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
-     }
+    }
   }
 }
