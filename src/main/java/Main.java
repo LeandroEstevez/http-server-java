@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
@@ -19,8 +21,36 @@ public class Main {
        Socket client = serverSocket.accept(); // Wait for connection from client.
        System.out.println("accepted new connection");
 
-       PrintWriter out = new PrintWriter(client.getOutputStream(), true);
-       out.print("HTTP/1.1 200 OK\r\n\r\n");
+       InputStream inputStream = client.getInputStream();
+       InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+       BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+       List<String> lineList = new ArrayList<>();
+       String line = null;
+       while (true) {
+           line = bufferedReader.readLine();
+
+           if (line == null) {
+               break;
+           }
+
+           lineList.add(line);
+       }
+
+       String requestLine = lineList.get(0);
+       String[] requestLineSplit = requestLine.split(" ");
+
+       String method = requestLineSplit[0];
+       String requestTarget = requestLineSplit[1];
+       String httpVersion = requestLineSplit[2];
+
+       PrintWriter out = new PrintWriter(client.getOutputStream());
+
+       if (requestTarget.equals("/")) {
+           out.print("HTTP/1.1 200 OK\r\n\r\n");
+       } else {
+           out.print("HTTP/1.1 404 Not Found\r\n\r\n");
+       }
        out.flush();
 
      } catch (IOException e) {
