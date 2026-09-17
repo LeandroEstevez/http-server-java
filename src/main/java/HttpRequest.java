@@ -6,12 +6,13 @@ public class HttpRequest {
     private String method;
     private String requestTarget;
     private String httpVersion;
+    private static final String[] PATHS = {"/echo/*"};
 
 
     public HttpRequest(List<String> lineList) {
         this.lineList = lineList;
 
-        parseRequest();
+        this.parseRequest();
     }
 
     private void parseRequest() {
@@ -21,6 +22,17 @@ public class HttpRequest {
         this.method = requestLineSplit[0];
         this.requestTarget = requestLineSplit[1];
         this.httpVersion = requestLineSplit[2];
+    }
+
+    public String buildResponse(String body) {
+        String contentType = "Content-Type: text/plain";
+        String contentLength = "Content-Length: " + body.length();
+
+        String responseLine = "HTTP/1.1 200 OK";
+
+        String separator = "\r\n";
+
+        return responseLine + separator + contentType + separator + contentLength + separator + separator + body;
     }
 
     public List<String> getLineList() {
