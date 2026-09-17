@@ -17,7 +17,6 @@ public class Main {
        serverSocket.setReuseAddress(true);
 
        Socket client = serverSocket.accept(); // Wait for connection from client.
-       System.out.println("accepted new connection");
 
        InputStream inputStream = client.getInputStream();
        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -35,16 +34,11 @@ public class Main {
            lineList.add(line);
        }
 
-       String requestLine = lineList.get(0);
-       String[] requestLineSplit = requestLine.split(" ");
-
-       String method = requestLineSplit[0];
-       String requestTarget = requestLineSplit[1];
-       String httpVersion = requestLineSplit[2];
+       HttpRequest request = new HttpRequest(lineList);
 
        PrintWriter out = new PrintWriter(client.getOutputStream());
 
-       if (requestTarget.equals("/")) {
+       if (request.getRequestTarget().equals("/")) {
            out.print("HTTP/1.1 200 OK\r\n\r\n");
        } else {
            out.print("HTTP/1.1 404 Not Found\r\n\r\n");
