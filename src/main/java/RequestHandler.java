@@ -1,8 +1,9 @@
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class RequestHandler {
-    private String[] endpoints = {"/echo/{str}", "/user-agent"};
+    private String[] endpoints = {"/echo/{str}", "/user-agent", "/files/{filename}"};
     private HttpRequest request;
     private int endPointIndex = -1;
     private Map<String, String> variables = new HashMap<>();
@@ -14,21 +15,54 @@ public class RequestHandler {
     }
 
     public String handleRequest() {
-        String body = "";
-        String contentTypeHeader = "Content-Type: text/plain";
+        String body = null;
+        String contentTypeHeader = null;
         String contentLengthHeader = null;
         String responseLine = "HTTP/1.1 200 OK";
 
-        if (this.endPointIndex == 0) {
-            body = this.variables.get("str");
-        } else if (this.endPointIndex == 1) {
-            String userAgent = request.getHeaders().get("User-Agent");
-            body = userAgent;
+        if (this.request.getRequestTarget() != null && this.request.getRequestTarget().equals("/")) {
+            responseLine = "HTTP/1.1 200 OK\r\n\r\n";
+            return responseLine;
+        } else if (this.endPointIndex == -1) {
+            responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
+            return responseLine;
+        } else {
+            if (this.endPointIndex == 0) {
+                body = this.variables.get("str");
+                contentTypeHeader = "Content-Type: text/plain";
+                contentLengthHeader = "Content-Length: " + body.length();
+            } else if (this.endPointIndex == 1) {
+                String userAgent = request.getHeaders().get("User-Agent");
+                body = userAgent;
+                contentTypeHeader = "Content-Type: text/plain";
+                contentLengthHeader = "Content-Length: " + body.length();
+            } else if (this.endPointIndex == 2) {
+                File file = new File(Main.rootDir + this.variables.get("filename"));
+
+                if (file.exists() == false) {
+                    responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
+                    return responseLine;
+                }
+
+                contentTypeHeader = "Content-Type: application/octet-stream";
+
+                StringBuilder stringBuilder = new StringBuilder();
+
+                try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        stringBuilder.append(line + "\n");
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error opening the file: " + e.getMessage());
+                }
+
+                body = stringBuilder.toString();
+                contentLengthHeader = "Content-Length: " + file.length();
+            }
+
+            return responseLine + HttpRequest.SEPARATOR + contentTypeHeader + HttpRequest.SEPARATOR + contentLengthHeader + HttpRequest.SEPARATOR + HttpRequest.SEPARATOR + body;
         }
-
-        contentLengthHeader = "Content-Length: " + body.length();
-
-        return responseLine + HttpRequest.SEPARATOR + contentTypeHeader + HttpRequest.SEPARATOR + contentLengthHeader + HttpRequest.SEPARATOR + HttpRequest.SEPARATOR + body;
     }
 
     public int matchPath() {

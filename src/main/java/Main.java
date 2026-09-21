@@ -5,7 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+    public static String flag;
+    public static String rootDir;
+
     public static void main(String[] args) {
+
+        if (args.length >= 2) {
+            Main.flag = args[0];
+            Main.rootDir = args[1];
+        }
 
         try {
             ServerSocket serverSocket = new ServerSocket(4221);
@@ -38,7 +46,7 @@ public class Main {
 
             // Read bytes from socket
             List<String> lineList = new ArrayList<>();
-            String line = null;
+            String line;
             while (true) {
                 line = bufferedReader.readLine();
 
@@ -52,16 +60,8 @@ public class Main {
             // Parse and handle request
             HttpRequest request = new HttpRequest(lineList);
             RequestHandler requestHandler = new RequestHandler(request);
-
-            // Return appropriate response
-            if (request.getRequestTarget() != null && request.getRequestTarget().equals("/")) {
-                out.print("HTTP/1.1 200 OK\r\n\r\n");
-            } else if (requestHandler.getEndPointIndex() == -1) {
-                out.print("HTTP/1.1 404 Not Found\r\n\r\n");
-            } else {
-                String response = requestHandler.handleRequest();
-                out.print(response);
-            }
+            String response = requestHandler.handleRequest();
+            out.print(response);
 
             out.flush();
         } catch (IOException e) {
