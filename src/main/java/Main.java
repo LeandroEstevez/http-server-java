@@ -14,8 +14,22 @@ public class Main {
             // ensures that we don't run into 'Address already in use' errors
             serverSocket.setReuseAddress(true);
 
-            Socket client = serverSocket.accept(); // Wait for connection from client.
+            while (true) {
+                Socket client = serverSocket.accept();  // Wait for connection from client.
 
+                Thread thread = new Thread(() -> {
+                    handleConection(client);
+                });
+                thread.start();
+            }
+
+        } catch (IOException e) {
+            System.out.println("IOException: " + e.getMessage());
+        }
+    }
+
+    public static void handleConection(Socket client) {
+        try {
             InputStream inputStream = client.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -50,9 +64,14 @@ public class Main {
             }
 
             out.flush();
-
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
+        } finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                System.out.println("IOException: " + e.getMessage());
+            }
         }
     }
 }
