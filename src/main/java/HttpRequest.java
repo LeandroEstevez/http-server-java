@@ -1,4 +1,6 @@
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HttpRequest {
     private List<String> lineList;
@@ -7,6 +9,8 @@ public class HttpRequest {
     private String requestTarget;
     private String httpVersion;
     private static final String[] PATHS = {"/echo/*"};
+    public static final String SEPARATOR = "\r\n";
+    private Map<String, String> headers = new HashMap<>();
 
 
     public HttpRequest(List<String> lineList) {
@@ -16,23 +20,45 @@ public class HttpRequest {
     }
 
     private void parseRequest() {
-        this.rawRequestLine = this.lineList.get(0);
-        String[] requestLineSplit = this.rawRequestLine.split(" ");
+        if (this.lineList.size() > 0) {
+            this.rawRequestLine = this.lineList.get(0);
+            String[] requestLineSplit = this.rawRequestLine.split(" ");
 
-        this.method = requestLineSplit[0];
-        this.requestTarget = requestLineSplit[1];
-        this.httpVersion = requestLineSplit[2];
+            this.method = requestLineSplit[0];
+            this.requestTarget = requestLineSplit[1];
+            this.httpVersion = requestLineSplit[2];
+
+            this.parseHeaders();
+        }
     }
 
-    public String buildResponse(String body) {
-        String contentType = "Content-Type: text/plain";
-        String contentLength = "Content-Length: " + body.length();
+    private void parseHeaders() {
+        for (int i = 1; i < this.lineList.size(); i++) {
+            if (this.lineList.get(i).isEmpty()) {
+                break;
+            }
 
-        String responseLine = "HTTP/1.1 200 OK";
+            StringBuilder headerBuilder = new StringBuilder();
+            String header;
+            String value;
+            int limitIndex = -1;
 
-        String separator = "\r\n";
+            String line = this.lineList.get(i);
+            char[] charArray = line.toCharArray();
 
-        return responseLine + separator + contentType + separator + contentLength + separator + separator + body;
+            for (int j = 0; j < charArray.length; j++) {
+                if (charArray[j] == ':') {
+                    limitIndex = j;
+                    break;
+                }
+                headerBuilder.append(charArray[j]);
+            }
+
+            header = headerBuilder.toString();
+            value = line.substring(limitIndex + 2, line.length());
+
+            this.headers.put(header, value);
+        }
     }
 
     public List<String> getLineList() {
@@ -73,5 +99,13 @@ public class HttpRequest {
 
     public void setHttpVersion(String httpVersion) {
         this.httpVersion = httpVersion;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
     }
 }

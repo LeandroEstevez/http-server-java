@@ -22,6 +22,7 @@ public class Main {
 
             PrintWriter out = new PrintWriter(client.getOutputStream());
 
+            // Read bytes from socket
             List<String> lineList = new ArrayList<>();
             String line = null;
             while (true) {
@@ -34,26 +35,17 @@ public class Main {
                 lineList.add(line);
             }
 
+            // Parse and handle request
             HttpRequest request = new HttpRequest(lineList);
+            RequestHandler requestHandler = new RequestHandler(request);
 
-            String[] requestTargetDivided = request.getRequestTarget().split("/");
-
-            String str = null;
-            for (int i = 0; i < requestTargetDivided.length; i++) {
-                if (requestTargetDivided[i].equals("echo")){
-                    str = requestTargetDivided[i + 1];
-                    System.out.println(str);
-                    break;
-                }
-            }
-
-            if (request.getRequestTarget().equals("/")) {
+            // Return appropriate response
+            if (request.getRequestTarget() != null && request.getRequestTarget().equals("/")) {
                 out.print("HTTP/1.1 200 OK\r\n\r\n");
-            } else if (str == null) {
+            } else if (requestHandler.getEndPointIndex() == -1) {
                 out.print("HTTP/1.1 404 Not Found\r\n\r\n");
             } else {
-                System.out.println(request.getRequestTarget());
-                String response = request.buildResponse(str);
+                String response = requestHandler.handleRequest();
                 out.print(response);
             }
 
