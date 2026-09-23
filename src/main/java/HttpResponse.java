@@ -41,7 +41,7 @@ public class HttpResponse {
         if (acceptEncodingHeader == null) {
             return;
         }
-        String[] acceptEncodingArr = acceptEncodingHeader.split(",");
+        String[] acceptEncodingArr = acceptEncodingHeader.split(", ");
 
         for (String encoding: acceptEncodingArr) {
             if (supportedEncoding.contains(encoding)) {
