@@ -3,10 +3,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestHandler {
-    private String[] endpoints = {"/echo/{str}", "/user-agent", "/files/{filename}"};
+    private String[] endpoints = {"/echo/{str}", "/user-agent", "/files/{filename}", "/"};
     private HttpRequest request;
     private int endPointIndex = -1;
-    private Map<String, String> variables = new HashMap<>();
+    private Map<String, String> pathVariables = new HashMap<>();
 
     public RequestHandler(HttpRequest request) {
         this.request = request;
@@ -15,37 +15,38 @@ public class RequestHandler {
     }
 
     public String handleRequest() {
-        String body = null;
-        String contentTypeHeader = null;
-        String contentLengthHeader = null;
-        String responseLine = "HTTP/1.1 200 OK";
+        HttpResponse httpResponse = new HttpResponse();
+        httpResponse.setEncodingHeader(this.request.getHeaders().get("Accept-Encoding"));
 
-        if (this.request.getRequestTarget() != null && this.request.getRequestTarget().equals("/")) {
-            responseLine = "HTTP/1.1 200 OK\r\n\r\n";
-            return responseLine;
-        } else if (this.endPointIndex == -1) {
-            responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
-            return responseLine;
+        if (this.endPointIndex == -1) {
+            httpResponse.setResponseCode("404");
+            httpResponse.setReasonPhrase("Not Found");
         } else {
             if (this.endPointIndex == 0) {
-                body = this.variables.get("str");
-                contentTypeHeader = "Content-Type: text/plain";
-                contentLengthHeader = "Content-Length: " + body.length();
+                httpResponse.setResponseCode("200");
+                httpResponse.setReasonPhrase("OK");
+                httpResponse.setBody(this.pathVariables.get("str"));
+                httpResponse.getHeaders().put("Content-Type", "text/plain");
+                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getBody().length()));
             } else if (this.endPointIndex == 1) {
                 String userAgent = request.getHeaders().get("User-Agent");
-                body = userAgent;
-                contentTypeHeader = "Content-Type: text/plain";
-                contentLengthHeader = "Content-Length: " + body.length();
+                httpResponse.setResponseCode("200");
+                httpResponse.setReasonPhrase("OK");
+                httpResponse.setBody(userAgent);
+                httpResponse.getHeaders().put("Content-Type", "text/plain");
+                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getBody().length()));
             } else if (this.endPointIndex == 2) {
-                File file = new File(Main.rootDir + this.variables.get("filename"));
+                File file = new File(Main.rootDir + this.pathVariables.get("filename"));
 
                 if (this.request.getMethod().equals("GET")) {
                     if (file.exists() == false) {
-                        responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
-                        return responseLine;
+                        httpResponse.setResponseCode("404");
+                        httpResponse.setReasonPhrase("Not Found");
+
+                        return httpResponse.buildResponse();
                     }
 
-                    contentTypeHeader = "Content-Type: application/octet-stream";
+                    httpResponse.getHeaders().put("Content-Type", "application/octet-stream");
 
                     StringBuilder stringBuilder = new StringBuilder();
 
@@ -58,28 +59,33 @@ public class RequestHandler {
                         System.out.println("Error opening the file: " + e.getMessage());
                     }
 
-                    body = stringBuilder.toString();
-                    contentLengthHeader = "Content-Length: " + file.length();
+                    httpResponse.setResponseCode("200");
+                    httpResponse.setReasonPhrase("OK");
+                    httpResponse.setBody(stringBuilder.toString());
+                    httpResponse.getHeaders().put("Content-Length", String.valueOf(file.length()));
                 } else if (this.request.getMethod().equals("POST")) {
                     try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
                         file.createNewFile();
-
-                        System.out.println("final body: " + this.request.getBody());
 
                         bufferedWriter.write(this.request.getBody());
 
                         bufferedWriter.flush();
 
-                        responseLine = "HTTP/1.1 201 Created\r\n\r\n";
-                        return responseLine;
+                        httpResponse.setResponseCode("201");
+                        httpResponse.setReasonPhrase("Created");
+
+                        return httpResponse.buildResponse();
                     } catch (IOException e) {
                         System.out.println("Error creating file: " + e.getMessage());
                     }
                 }
+            } else if (this.endPointIndex == 3) {
+                httpResponse.setResponseCode("200");
+                httpResponse.setReasonPhrase("OK");
             }
 
-            return responseLine + HttpRequest.SEPARATOR + contentTypeHeader + HttpRequest.SEPARATOR + contentLengthHeader + HttpRequest.SEPARATOR + HttpRequest.SEPARATOR + body;
         }
+        return httpResponse.buildResponse();
     }
 
     public int matchPath() {
@@ -87,6 +93,10 @@ public class RequestHandler {
 
         if (requestTarget != null && requestTarget.length() != 0) {
             String[] requestTargetSplit = requestTarget.split("/");
+
+            if (requestTargetSplit.length == 0) {
+                return 3;
+            }
 
             int indexMatch = -1;
 
@@ -107,7 +117,7 @@ public class RequestHandler {
                             i++;
                         } else if (endpointSplit[i].startsWith("{")) {
                             String variableName = endpointSplit[i].substring(1, endpointSplit[i].length() - 1);
-                            this.variables.put(variableName, requestTargetSplit[i]);
+                            this.pathVariables.put(variableName, requestTargetSplit[i]);
                             i++;
                         } else {
                             break;
@@ -151,11 +161,11 @@ public class RequestHandler {
         this.endPointIndex = endPointIndex;
     }
 
-    public Map<String, String> getVariables() {
-        return variables;
+    public Map<String, String> getpathVariables() {
+        return pathVariables;
     }
 
-    public void setVariables(Map<String, String> variables) {
-        this.variables = variables;
+    public void setpathVariables(Map<String, String> pathVariables) {
+        this.pathVariables = pathVariables;
     }
 }

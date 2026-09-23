@@ -1,40 +1,39 @@
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class HttpRequest {
-    private String[] lineList;
-    private String rawRequestLine;
+    public static final String SEPARATOR = "\r\n";
+
+    private final String[] lineArr;
     private String method;
     private String requestTarget;
     private String httpVersion;
-    private static final String[] PATHS = {"/echo/*"};
-    public static final String SEPARATOR = "\r\n";
     private Map<String, String> headers = new HashMap<>();
-    private int bodyStartIndex = -1;
     private String body;
+    private String[] acceptedCompression = {"gzip"};
 
-    public HttpRequest(String[] lineList) {
-        this.lineList = lineList;
+    public HttpRequest(String[] lineArr) {
+        this.lineArr = lineArr;
 
         this.parseRequest();
     }
 
     private void parseRequest() {
-        this.rawRequestLine = this.lineList[0];
-        String[] requestLineSplit = this.rawRequestLine.split(" ");
+        this.parseRequestLine();
+        this.parseHeaders();
+    }
+
+    private void parseRequestLine() {
+        String[] requestLineSplit = this.lineArr[0].split(" ");
 
         this.method = requestLineSplit[0];
         this.requestTarget = requestLineSplit[1];
         this.httpVersion = requestLineSplit[2];
-
-        this.parseHeaders();
     }
 
     private void parseHeaders() {
-        for (int i = 1; i < this.lineList.length; i++) {
-            if (this.lineList[i].isEmpty()) {
+        for (int i = 1; i < this.lineArr.length; i++) {
+            if (this.lineArr[i].isEmpty()) {
                 break;
             }
 
@@ -43,7 +42,7 @@ public class HttpRequest {
             String value;
             int limitIndex = -1;
 
-            String line = this.lineList[i];
+            String line = this.lineArr[i];
             char[] charArray = line.toCharArray();
 
             for (int j = 0; j < charArray.length; j++) {
@@ -61,52 +60,16 @@ public class HttpRequest {
         }
     }
 
-    public String[] getLineList() {
-        return lineList;
-    }
-
-    public void setLineList(String[] lineList) {
-        this.lineList = lineList;
-    }
-
-    public String getRawRequestLine() {
-        return rawRequestLine;
-    }
-
-    public void setRawRequestLine(String rawRequestLine) {
-        this.rawRequestLine = rawRequestLine;
-    }
-
     public String getMethod() {
         return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
     }
 
     public String getRequestTarget() {
         return requestTarget;
     }
 
-    public void setRequestTarget(String requestTarget) {
-        this.requestTarget = requestTarget;
-    }
-
-    public String getHttpVersion() {
-        return httpVersion;
-    }
-
-    public void setHttpVersion(String httpVersion) {
-        this.httpVersion = httpVersion;
-    }
-
     public Map<String, String> getHeaders() {
         return headers;
-    }
-
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
     }
 
     public String getBody() {

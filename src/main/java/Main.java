@@ -71,7 +71,6 @@ public class Main {
 
                 if (bodyStart) {
                     text = requestTextBuilder.toString();
-                    System.out.println("Start of the request: " + text);
                     String[] textLines = text.split("\r\n");
                     request = new HttpRequest(textLines);
 
@@ -110,82 +109,6 @@ public class Main {
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());
         }
-
-        /*
-        try {
-            InputStream inputStream = client.getInputStream();
-            boolean requestReceieved = false;
-            byte[] buffer = new byte[1024];
-            byte current = -1;
-            byte previous = -1;
-            byte previous1 = -1;
-            byte previous2 = -1;
-            boolean startOfBody = false;
-            StringBuilder requestTextBuilder = new StringBuilder();
-            HttpRequest request = new HttpRequest();
-
-            while (!requestReceieved) {
-                int bytesRead = inputStream.read(buffer);
-                int startOfBodyIndex = bytesRead;
-
-                for (int i = 0; i < bytesRead; i++) {
-                    current = buffer[i];
-                    if (previous2 == '\r' && previous1 == '\n' && previous == '\r' && current == '\n') {
-                        startOfBodyIndex = i + 1;
-                        startOfBody = true;
-                        break;
-                    }
-                    previous2 = previous1;
-                    previous1 = previous;
-                    previous = current;
-                }
-
-                String text = new String(buffer, 0, startOfBodyIndex, StandardCharsets.US_ASCII);
-                requestTextBuilder.append(text);
-
-                if (startOfBody) {
-                    String firstPart = requestTextBuilder.toString();
-                    String[] lineList = firstPart.split("\r\n");
-                    request.parseFirstPart(lineList);
-
-                    request.getHeaders
-                }
-            }
-
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            PrintWriter out = new PrintWriter(client.getOutputStream());
-
-            // Read lines from socket for request line + headers
-            List<String> lineList = new ArrayList<>();
-            String line;
-            while (true) {
-                line = bufferedReader.readLine();
-
-                if (line == null || line.isEmpty()) {
-                    break;
-                }
-
-                lineList.add(line);
-            }
-
-            // Parse and handle request
-            HttpRequest request = new HttpRequest(lineList);
-            RequestHandler requestHandler = new RequestHandler(request);
-            String response = requestHandler.handleRequest();
-            out.print(response);
-
-            out.flush();
-        } catch (IOException e) {
-            System.out.println("IOException: " + e.getMessage());
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                System.out.println("IOException: " + e.getMessage());
-            }
-        }
-        */
     }
 }
 
