@@ -39,26 +39,43 @@ public class RequestHandler {
             } else if (this.endPointIndex == 2) {
                 File file = new File(Main.rootDir + this.variables.get("filename"));
 
-                if (file.exists() == false) {
-                    responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
-                    return responseLine;
-                }
-
-                contentTypeHeader = "Content-Type: application/octet-stream";
-
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-                    String line;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        stringBuilder.append(line + "\n");
+                if (this.request.getMethod().equals("GET")) {
+                    if (file.exists() == false) {
+                        responseLine = "HTTP/1.1 404 Not Found\r\n\r\n";
+                        return responseLine;
                     }
-                } catch (IOException e) {
-                    System.out.println("Error opening the file: " + e.getMessage());
-                }
 
-                body = stringBuilder.toString();
-                contentLengthHeader = "Content-Length: " + file.length();
+                    contentTypeHeader = "Content-Type: application/octet-stream";
+
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            stringBuilder.append(line + "\n");
+                        }
+                    } catch (IOException e) {
+                        System.out.println("Error opening the file: " + e.getMessage());
+                    }
+
+                    body = stringBuilder.toString();
+                    contentLengthHeader = "Content-Length: " + file.length();
+                } else if (this.request.getMethod().equals("POST")) {
+                    try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
+                        file.createNewFile();
+
+                        System.out.println("final body: " + this.request.getBody());
+
+                        bufferedWriter.write(this.request.getBody());
+
+                        bufferedWriter.flush();
+
+                        responseLine = "HTTP/1.1 201 Created\r\n\r\n";
+                        return responseLine;
+                    } catch (IOException e) {
+                        System.out.println("Error creating file: " + e.getMessage());
+                    }
+                }
             }
 
             return responseLine + HttpRequest.SEPARATOR + contentTypeHeader + HttpRequest.SEPARATOR + contentLengthHeader + HttpRequest.SEPARATOR + HttpRequest.SEPARATOR + body;

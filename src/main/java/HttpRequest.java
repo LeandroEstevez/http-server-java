@@ -1,9 +1,10 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HttpRequest {
-    private List<String> lineList;
+    private String[] lineList;
     private String rawRequestLine;
     private String method;
     private String requestTarget;
@@ -11,30 +12,29 @@ public class HttpRequest {
     private static final String[] PATHS = {"/echo/*"};
     public static final String SEPARATOR = "\r\n";
     private Map<String, String> headers = new HashMap<>();
+    private int bodyStartIndex = -1;
+    private String body;
 
-
-    public HttpRequest(List<String> lineList) {
+    public HttpRequest(String[] lineList) {
         this.lineList = lineList;
 
         this.parseRequest();
     }
 
     private void parseRequest() {
-        if (this.lineList.size() > 0) {
-            this.rawRequestLine = this.lineList.get(0);
-            String[] requestLineSplit = this.rawRequestLine.split(" ");
+        this.rawRequestLine = this.lineList[0];
+        String[] requestLineSplit = this.rawRequestLine.split(" ");
 
-            this.method = requestLineSplit[0];
-            this.requestTarget = requestLineSplit[1];
-            this.httpVersion = requestLineSplit[2];
+        this.method = requestLineSplit[0];
+        this.requestTarget = requestLineSplit[1];
+        this.httpVersion = requestLineSplit[2];
 
-            this.parseHeaders();
-        }
+        this.parseHeaders();
     }
 
     private void parseHeaders() {
-        for (int i = 1; i < this.lineList.size(); i++) {
-            if (this.lineList.get(i).isEmpty()) {
+        for (int i = 1; i < this.lineList.length; i++) {
+            if (this.lineList[i].isEmpty()) {
                 break;
             }
 
@@ -43,7 +43,7 @@ public class HttpRequest {
             String value;
             int limitIndex = -1;
 
-            String line = this.lineList.get(i);
+            String line = this.lineList[i];
             char[] charArray = line.toCharArray();
 
             for (int j = 0; j < charArray.length; j++) {
@@ -61,11 +61,11 @@ public class HttpRequest {
         }
     }
 
-    public List<String> getLineList() {
+    public String[] getLineList() {
         return lineList;
     }
 
-    public void setLineList(List<String> lineList) {
+    public void setLineList(String[] lineList) {
         this.lineList = lineList;
     }
 
@@ -107,5 +107,13 @@ public class HttpRequest {
 
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 }
