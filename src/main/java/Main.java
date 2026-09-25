@@ -38,7 +38,7 @@ public class Main {
     public static void handleConection(Socket client) {
         try {
             InputStream inputStream = client.getInputStream();
-            PrintWriter out = new PrintWriter(client.getOutputStream());
+            OutputStream out = client.getOutputStream();
             StringBuilder requestTextBuilder = new StringBuilder();
             HttpRequest request;
             byte[] buffer = new byte[1024];
@@ -98,9 +98,21 @@ public class Main {
                     }
 
                     RequestHandler requestHandler = new RequestHandler(request);
-                    String response = requestHandler.handleRequest();
+                    requestHandler.handleRequest();
+                    HttpResponse httpResponse = requestHandler.getHttpResponse();
+                    String headers = httpResponse.getResponseHeaders();
+                    byte[] headersByteArr = headers.getBytes(StandardCharsets.US_ASCII);
 
-                    out.print(response);
+                    out.write(headersByteArr);
+                    if (httpResponse.getOriginalBody() != null) {
+                        byte[] body;
+                        if (httpResponse.isBodyCompressed()) {
+                            body = httpResponse.getCompressedBody();
+                        } else {
+                            body = httpResponse.getOriginalBody().getBytes(StandardCharsets.US_ASCII);
+                        }
+                        out.write(body);
+                    }
 
                     out.flush();
                 }

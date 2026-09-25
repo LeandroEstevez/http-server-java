@@ -7,6 +7,7 @@ public class RequestHandler {
     private HttpRequest request;
     private int endPointIndex = -1;
     private Map<String, String> pathVariables = new HashMap<>();
+    private HttpResponse httpResponse;
 
     public RequestHandler(HttpRequest request) {
         this.request = request;
@@ -14,8 +15,8 @@ public class RequestHandler {
         this.endPointIndex = this.matchPath();
     }
 
-    public String handleRequest() {
-        HttpResponse httpResponse = new HttpResponse();
+    public void handleRequest() {
+        this.httpResponse = new HttpResponse();
         httpResponse.setEncodingHeader(this.request.getHeaders().get("Accept-Encoding"));
 
         if (this.endPointIndex == -1) {
@@ -25,16 +26,16 @@ public class RequestHandler {
             if (this.endPointIndex == 0) {
                 httpResponse.setResponseCode("200");
                 httpResponse.setReasonPhrase("OK");
-                httpResponse.setBody(this.pathVariables.get("str"));
+                httpResponse.setOriginalBody(this.pathVariables.get("str"));
                 httpResponse.getHeaders().put("Content-Type", "text/plain");
-                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getBody().length()));
+                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getOriginalBody().length()));
             } else if (this.endPointIndex == 1) {
                 String userAgent = request.getHeaders().get("User-Agent");
                 httpResponse.setResponseCode("200");
                 httpResponse.setReasonPhrase("OK");
-                httpResponse.setBody(userAgent);
+                httpResponse.setOriginalBody(userAgent);
                 httpResponse.getHeaders().put("Content-Type", "text/plain");
-                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getBody().length()));
+                httpResponse.getHeaders().put("Content-Length", String.valueOf(httpResponse.getOriginalBody().length()));
             } else if (this.endPointIndex == 2) {
                 File file = new File(Main.rootDir + this.pathVariables.get("filename"));
 
@@ -43,7 +44,9 @@ public class RequestHandler {
                         httpResponse.setResponseCode("404");
                         httpResponse.setReasonPhrase("Not Found");
 
-                        return httpResponse.buildResponse();
+                        httpResponse.buildHeaders();
+
+                        return;
                     }
 
                     httpResponse.getHeaders().put("Content-Type", "application/octet-stream");
@@ -61,7 +64,7 @@ public class RequestHandler {
 
                     httpResponse.setResponseCode("200");
                     httpResponse.setReasonPhrase("OK");
-                    httpResponse.setBody(stringBuilder.toString());
+                    httpResponse.setOriginalBody(stringBuilder.toString());
                     httpResponse.getHeaders().put("Content-Length", String.valueOf(file.length()));
                 } else if (this.request.getMethod().equals("POST")) {
                     try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
@@ -74,7 +77,7 @@ public class RequestHandler {
                         httpResponse.setResponseCode("201");
                         httpResponse.setReasonPhrase("Created");
 
-                        return httpResponse.buildResponse();
+                        httpResponse.buildHeaders();
                     } catch (IOException e) {
                         System.out.println("Error creating file: " + e.getMessage());
                     }
@@ -85,7 +88,7 @@ public class RequestHandler {
             }
 
         }
-        return httpResponse.buildResponse();
+        httpResponse.buildHeaders();
     }
 
     public int matchPath() {
@@ -166,6 +169,22 @@ public class RequestHandler {
     }
 
     public void setpathVariables(Map<String, String> pathVariables) {
+        this.pathVariables = pathVariables;
+    }
+
+    public HttpResponse getHttpResponse() {
+        return httpResponse;
+    }
+
+    public void setHttpResponse(HttpResponse httpResponse) {
+        this.httpResponse = httpResponse;
+    }
+
+    public Map<String, String> getPathVariables() {
+        return pathVariables;
+    }
+
+    public void setPathVariables(Map<String, String> pathVariables) {
         this.pathVariables = pathVariables;
     }
 }
