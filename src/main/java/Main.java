@@ -117,6 +117,11 @@ public class Main {
                     out.flush();
 
                     requestTextBuilder = new StringBuilder();
+
+                    if (httpResponse.getHeaders().get("Connection") != null && httpResponse.getHeaders().get("Connection").equals("Close")) {
+                        client.close();
+                        return;
+                    }
                 }
             }
 

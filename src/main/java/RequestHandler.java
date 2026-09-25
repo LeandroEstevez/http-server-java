@@ -19,6 +19,10 @@ public class RequestHandler {
         this.httpResponse = new HttpResponse();
         httpResponse.setEncodingHeader(this.request.getHeaders().get("Accept-Encoding"));
 
+        if (this.request.getHeaders().get("Connection") != null) {
+            httpResponse.getHeaders().put("Connection", "Close");
+        }
+
         if (this.endPointIndex == -1) {
             httpResponse.setResponseCode("404");
             httpResponse.setReasonPhrase("Not Found");
