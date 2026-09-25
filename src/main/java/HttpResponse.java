@@ -15,7 +15,7 @@ public class HttpResponse {
     private String responseHeaders;
 
     public void buildHeaders() {
-        String responseLine = String.join(" ", this.HttpVersion, this.responseCode, this.reasonPhrase) + HttpRequest.SEPARATOR;
+        String responseLine = String.join(" ", this.HttpVersion, this.responseCode, this.reasonPhrase);
 
         if (this.originalBody != null) {
             if (this.headers.get("Content-Encoding") != null && this.headers.get("Content-Encoding").equals("gzip")) {
@@ -43,7 +43,7 @@ public class HttpResponse {
 
         if (!headersList.isEmpty()) {
             String headerLines = String.join(HttpRequest.SEPARATOR, headersList);
-            this.responseHeaders = responseLine + headerLines + bodyDelimiter;
+            this.responseHeaders = responseLine + HttpRequest.SEPARATOR + headerLines + bodyDelimiter;
         } else {
             this.responseHeaders = responseLine + bodyDelimiter;
         }

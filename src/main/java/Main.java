@@ -115,6 +115,8 @@ public class Main {
                     }
 
                     out.flush();
+
+                    requestTextBuilder = new StringBuilder();
                 }
             }
 

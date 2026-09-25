@@ -43,6 +43,7 @@ public class HttpRequest {
             int limitIndex = -1;
 
             String line = this.lineArr[i];
+            System.out.println("Line from line array: " + line);
             char[] charArray = line.toCharArray();
 
             for (int j = 0; j < charArray.length; j++) {
@@ -58,6 +59,8 @@ public class HttpRequest {
 
             this.headers.put(header, value);
         }
+
+        System.out.println("Request headers: " + this.headers);
     }
 
     public String getMethod() {
